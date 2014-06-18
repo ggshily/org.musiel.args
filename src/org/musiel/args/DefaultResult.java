@@ -10,24 +10,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing 
  * permissions and limitations under the License.
  */
-package org.musiel.args.generic;
+package org.musiel.args;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import org.musiel.args.ArgumentException;
-import org.musiel.args.ArgumentExceptions;
-import org.musiel.args.Result;
+import org.musiel.args.syntax.Syntax.SyntaxResult;
 
-public class AbstractResult< ACCESSOR> implements Result< ACCESSOR> {
+public class DefaultResult extends SimpleAccessorImpl implements Result< DefaultResult> {
 
 	private final Collection< ? extends ArgumentException> exceptions;
-	private final ACCESSOR accessor;
 
-	public AbstractResult( final Collection< ? extends ArgumentException> exceptions, final ACCESSOR accessor) {
-		super();
-		this.exceptions = exceptions;
-		this.accessor = accessor;
+	public DefaultResult( final SyntaxResult syntaxResult, final Map< String, List< String>> operandMap,
+			final Collection< ? extends ArgumentException> exceptions) {
+		super( syntaxResult, operandMap);
+		this.exceptions = Collections.unmodifiableCollection( new LinkedList<>( exceptions));
 	}
 
 	@ Override
@@ -36,8 +36,7 @@ public class AbstractResult< ACCESSOR> implements Result< ACCESSOR> {
 	}
 
 	@ Override
-	public AbstractResult< ACCESSOR> check( final Collection< Class< ? extends ArgumentException>> exceptionTypes)
-			throws ArgumentExceptions {
+	public DefaultResult check( final Collection< Class< ? extends ArgumentException>> exceptionTypes) throws ArgumentExceptions {
 		final LinkedList< ArgumentException> exceptions = new LinkedList<>();
 		for( final Class< ? extends ArgumentException> exceptionType: exceptionTypes)
 			for( final ArgumentException exception: this.exceptions)
@@ -49,7 +48,7 @@ public class AbstractResult< ACCESSOR> implements Result< ACCESSOR> {
 	}
 
 	@ Override
-	public AbstractResult< ACCESSOR> check( final Class< ? extends ArgumentException> exceptionType) throws ArgumentExceptions {
+	public DefaultResult check( final Class< ? extends ArgumentException> exceptionType) throws ArgumentExceptions {
 		final LinkedList< ArgumentException> exceptions = new LinkedList<>();
 		for( final ArgumentException exception: this.exceptions)
 			if( exceptionType.isInstance( exception))
@@ -60,14 +59,14 @@ public class AbstractResult< ACCESSOR> implements Result< ACCESSOR> {
 	}
 
 	@ Override
-	public ACCESSOR check() throws ArgumentExceptions {
+	public DefaultResult check() throws ArgumentExceptions {
 		if( !this.exceptions.isEmpty())
 			throw new ArgumentExceptions( this.exceptions);
-		return this.accessor;
+		return this;
 	}
 
 	@ Override
-	public ACCESSOR getAccessor() {
-		return this.accessor;
+	public DefaultResult getAccessor() {
+		return this;
 	}
 }

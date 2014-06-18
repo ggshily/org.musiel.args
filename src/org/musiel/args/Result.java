@@ -17,21 +17,22 @@ import java.util.Collection;
 /**
  * The result of a {@link Parser#parse(String...)} invocation.
  * 
- * @author Bagana
- * 
  * @param <ACCESSOR>
+ * 
+ * @author Bagana
  */
 public interface Result< ACCESSOR> {
 
 	/**
-	 * The {@link ArgumentException}s encountered during the parsing. Empty, if no error detected.
+	 * Returns the {@link ArgumentException}s encountered during the parsing. An empty collection is returned if no error is detected.
 	 * 
 	 * @return
 	 */
 	public Collection< ? extends ArgumentException> getErrors();
 
 	/**
-	 * Searches {@link #getErrors()} for {@link ArgumentException}s of the specified types and throw them if found.
+	 * Searches {@link #getErrors()} for {@link ArgumentException}s of the specified types and throws them if found. Otherwise, returns
+	 * current object.
 	 * 
 	 * @param exceptionTypes
 	 * @return
@@ -40,7 +41,8 @@ public interface Result< ACCESSOR> {
 	public Result< ACCESSOR> check( Collection< Class< ? extends ArgumentException>> exceptionTypes) throws ArgumentExceptions;
 
 	/**
-	 * Searches {@link #getErrors()} for {@link ArgumentException} of the specified type and throw them if found.
+	 * Searches {@link #getErrors()} for {@link ArgumentException} of the specified type and throws them if found. Otherwise, returns
+	 * current object.
 	 * 
 	 * @param exceptionType
 	 * @return
@@ -49,8 +51,8 @@ public interface Result< ACCESSOR> {
 	public Result< ACCESSOR> check( Class< ? extends ArgumentException> exceptionType) throws ArgumentExceptions;
 
 	/**
-	 * Throw all user errors wrapped in a {@link ArgumentExceptions}, or return an accessor if no error is found. The accessor returned in
-	 * this way is guarantees to comply every requirements, constraints, and patterns for the options and operands.
+	 * Throws all user errors in a {@link ArgumentExceptions} wrapper, or returns an accessor if no error is found. The accessor returned
+	 * in this way guarantees to comply every requirements, constraints, and patterns of the options and operands.
 	 * 
 	 * @return
 	 * @throws ArgumentExceptions
@@ -58,7 +60,9 @@ public interface Result< ACCESSOR> {
 	public ACCESSOR check() throws ArgumentExceptions;
 
 	/**
-	 * Get the accessor without checking the constraints. The returned accessor may carry incorrect and/or inconsistent data.
+	 * Returns the accessor without checking the constraints. The returned accessor may carry incorrect and/or inconsistent data. A
+	 * {@link Parser} implementation can elaborate more precisely on which methods of the return value are reliable or unreliable in this
+	 * case.
 	 * 
 	 * @return
 	 */

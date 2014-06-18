@@ -50,91 +50,71 @@ public abstract class AbstractParseResult implements SyntaxResult {
 					this.optionDictionary.put( name, option);
 	}
 
+	private String getCanonicalName( final String optionName) {
+		return this.optionDictionary.containsKey( optionName)? this.optionDictionary.get( optionName).getName(): optionName;
+	}
+
 	private final Map< String, List< String>> optionNames = new TreeMap<>();
 	private final Map< String, List< String>> optionArguments = new TreeMap<>();
 
-	private String getCanonicalName( final String optionName) {
-		final Option option = this.optionDictionary.get( optionName);
-		return option != null? option.getName(): optionName;
-	}
-
-	private List< String> getNamesInternal( final String optionName) {
+	private List< String> initializeAndGet( final Map< String, List< String>> map, final String optionName) {
 		final String canonicalName = this.getCanonicalName( optionName);
-		List< String> list = this.optionNames.get( canonicalName);
+		List< String> list = map.get( canonicalName);
 		if( list == null)
-			this.optionNames.put( canonicalName, list = new LinkedList<>());
-		return list;
-	}
-
-	private List< String> getArgumentsInternal( final String optionName) {
-		final String canonicalName = this.getCanonicalName( optionName);
-		List< String> list = this.optionArguments.get( canonicalName);
-		if( list == null)
-			this.optionArguments.put( canonicalName, list = new LinkedList<>());
+			map.put( canonicalName, list = new LinkedList<>());
 		return list;
 	}
 
 	protected void push( final String optionName, final String optionArgument) {
-		this.getNamesInternal( optionName).add( optionName);
-		this.getArgumentsInternal( optionName).add( optionArgument);
+		this.initializeAndGet( this.optionNames, optionName).add( optionName);
+		this.initializeAndGet( this.optionArguments, optionName).add( optionArgument);
 	}
 
 	@ Override
 	public List< String> getNames( final String optionName) {
-		return Collections.unmodifiableList( this.getNamesInternal( optionName));
+		return this.optionNames.get( this.getCanonicalName( optionName));
 	}
 
 	@ Override
 	public List< String> getArguments( final String optionName) {
-		return Collections.unmodifiableList( this.getArgumentsInternal( optionName));
+		return this.optionArguments.get( this.getCanonicalName( optionName));
 	}
 
 	@ Override
 	public List< String> getOperands() {
-		return Collections.unmodifiableList( this.operands);
+		return this.operands;
 	}
 
 	protected void build() {
+		// freeze lists
+		for( final Entry< String, List< String>> entry: this.optionNames.entrySet())
+			entry.setValue( Collections.unmodifiableList( new ArrayList<>( entry.getValue())));
+		for( final Entry< String, List< String>> entry: this.optionArguments.entrySet())
+			entry.setValue( Collections.unmodifiableList( new ArrayList<>( entry.getValue())));
+		this.operands = Collections.unmodifiableList( new ArrayList<>( this.operands));
+
 		for( final Option option: this.options) {
-			final List< String> names = this.getNamesInternal( option.getName());
-			final List< String> arguments = this.getArgumentsInternal( option.getName());
-
-			if( option.isRequired() && ( names == null || names.isEmpty()))
-				this.errors.add( new MissingOptionException( option.getName()));
-
-			if( !option.isRepeatable() && names != null && names.size() > 1)
-				this.errors.add( new TooManyOccurrenceException( names.get( 1), names));
-
-			if( !option.getArgumentPolicy().isAccepted()) {
-				final Iterator< String> nameIterator = names.iterator();
-				final Iterator< String> argumentIterator = arguments.iterator();
-				while( nameIterator.hasNext()) {
-					final String name = nameIterator.next();
-					final String argument = argumentIterator.next();
-					if( argument != null)
-						this.errors.add( new UnexpectedArgumentException( name));
-				}
+			List< String> names = this.optionNames.get( option.getName());
+			List< String> arguments = this.optionArguments.get( option.getName());
+			if( names == null) {
+				this.optionNames.put( option.getName(), names = Collections.< String>emptyList());
+				this.optionArguments.put( option.getName(), arguments = Collections.< String>emptyList());
 			}
 
-			if( option.getArgumentPolicy().isRequired()) {
-				final Iterator< String> nameIterator = names.iterator();
-				final Iterator< String> argumentIterator = arguments.iterator();
-				while( nameIterator.hasNext()) {
-					final String name = nameIterator.next();
-					final String argument = argumentIterator.next();
-					if( argument == null)
-						this.errors.add( new ArgumentRequiredException( name));
-				}
+			if( option.isRequired() && names.isEmpty())
+				this.errors.add( new MissingOptionException( option.getName()));
+			if( !option.isRepeatable() && names.size() > 1)
+				this.errors.add( new TooManyOccurrenceException( names.get( 1), names));
+			final Iterator< String> nameIterator = names.iterator();
+			final Iterator< String> argumentIterator = arguments.iterator();
+			while( nameIterator.hasNext()) {
+				final String name = nameIterator.next();
+				final String argument = argumentIterator.next();
+				if( !option.getArgumentPolicy().isAccepted() && argument != null)
+					this.errors.add( new UnexpectedArgumentException( name));
+				if( option.getArgumentPolicy().isRequired() && argument == null)
+					this.errors.add( new ArgumentRequiredException( name));
 			}
 		}
-
-		this.toArrayLists( this.optionNames);
-		this.toArrayLists( this.optionArguments);
-		this.operands = new ArrayList<>( this.operands);
-	}
-
-	private void toArrayLists( final Map< String, List< String>> map) {
-		for( final Entry< String, List< String>> entry: map.entrySet())
-			entry.setValue( new ArrayList<>( entry.getValue()));
 	}
 }

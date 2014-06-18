@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,8 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.musiel.args.ArgumentPolicy;
-import org.musiel.args.DefaultAccessor;
-import org.musiel.args.operand.OperandPattern;
+import org.musiel.args.SimpleAccessor;
 
 abstract class MethodHandler {
 
@@ -186,7 +186,7 @@ abstract class MethodHandler {
 		return new ArrayConstructor( declaredDecoder, componentType, PrimitiveType.forPrimitiveType( componentType).getDefaultValue());
 	}
 
-	public abstract Object decode( final DefaultAccessor basicAccessor, ExceptionHandler< DecoderException> exceptionHandler);
+	public abstract Object decode( final SimpleAccessor simpleAccessor, ExceptionHandler< DecoderException> exceptionHandler);
 }
 
 class OptionHandler extends MethodHandler {
@@ -222,11 +222,7 @@ class OptionHandler extends MethodHandler {
 				method.isAnnotationPresent( ArgumentName.class)? method.getAnnotation( ArgumentName.class).value(): null;
 
 		// register
-		parser.newOption( required, repeatable, argument, this.optionName, additionalNames);
-		if( description != null)
-			parser.setOptionDescription( this.optionName, description);
-		if( argumentName != null)
-			parser.setArgumentName( this.optionName, argumentName);
+		parser.addOption( this.optionName, additionalNames, required, repeatable, argument, description, argumentName);
 	}
 
 	private final static Pattern SHORT_NAME_APPLICABLE = Pattern.compile( "^[a-zA-Z0-9]$");
@@ -249,7 +245,7 @@ class OptionHandler extends MethodHandler {
 	}
 
 	@ Override
-	public Object decode( final DefaultAccessor basicAccessor, final ExceptionHandler< DecoderException> exceptionHandler) {
+	public Object decode( final SimpleAccessor simpleAccessor, final ExceptionHandler< DecoderException> exceptionHandler) {
 		return this.valueConstructor.decode( new ExceptionHandler< DecoderException>() {
 
 			@ Override
@@ -257,7 +253,7 @@ class OptionHandler extends MethodHandler {
 				exceptionHandler.handle( new DecoderException( exception, MethodHandler.class.getPackage().getName() + ".exceptions",
 						"illegal-value.option", OptionHandler.this.optionName));
 			}
-		}, this.defaultValue, this.environmentVariableName, basicAccessor.getArgumentsAsArray( this.optionName));
+		}, this.defaultValue, this.environmentVariableName, simpleAccessor.getArgumentsAsArray( this.optionName));
 	}
 }
 
@@ -265,7 +261,7 @@ class OperandHandler extends MethodHandler {
 
 	private final String operandName;
 
-	public OperandHandler( final Method method, final OperandPattern operandPattern) {
+	public OperandHandler( final Method method, final Collection< String> operandNames) {
 		super( method);
 
 		// check illegal annotations
@@ -277,7 +273,7 @@ class OperandHandler extends MethodHandler {
 		// check and set operand name
 		if( "".equals( operandName))
 			this.operandName = null;
-		else if( operandPattern == null || !operandPattern.getNames().contains( operandName))
+		else if( operandNames == null || !operandNames.contains( operandName))
 			throw new IllegalArgumentException( "operand name \"" + operandName + "\" does not exist in the operand pattern");
 		else
 			this.operandName = operandName;
@@ -294,7 +290,7 @@ class OperandHandler extends MethodHandler {
 	}
 
 	@ Override
-	public Object decode( final DefaultAccessor basicAccessor, final ExceptionHandler< DecoderException> exceptionHandler) {
+	public Object decode( final SimpleAccessor simpleAccessor, final ExceptionHandler< DecoderException> exceptionHandler) {
 		return this.valueConstructor.decode( new ExceptionHandler< DecoderException>() {
 
 			@ Override
@@ -305,6 +301,6 @@ class OperandHandler extends MethodHandler {
 						OperandHandler.this.operandName));
 			}
 		}, this.defaultValue, this.environmentVariableName,
-				this.operandName == null? basicAccessor.getOperandsAsArray(): basicAccessor.getOperandsAsArray( this.operandName));
+				this.operandName == null? simpleAccessor.getOperandsAsArray(): simpleAccessor.getOperandsAsArray( this.operandName));
 	}
 }

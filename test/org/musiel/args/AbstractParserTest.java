@@ -10,31 +10,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing 
  * permissions and limitations under the License.
  */
-package org.musiel.args.generic;
+package org.musiel.args;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.musiel.args.ArgumentPolicy;
-import org.musiel.args.DefaultAccessor;
-import org.musiel.args.Result;
 
 public abstract class AbstractParserTest {
 
 	@ Rule
 	public final ExpectedException exceptions = ExpectedException.none();
 
-	private AbstractParser< ? extends Result< ? extends DefaultAccessor>> parser;
+	private AbstractParser< ? extends Result< ? extends SimpleAccessor>> parser;
 
 	@ Before
 	public void setup() {
 		this.parser = this.newParser();
-		this.parser.newOption( "-a", "--all");
+		this.parser.addOption( "-a", new String[]{ "--all"}, false, false, ArgumentPolicy.NONE, null, null);
 	}
 
-	protected abstract AbstractParser< ? extends Result< ? extends DefaultAccessor>> newParser();
+	protected abstract AbstractParser< ? extends Result< ? extends SimpleAccessor>> newParser();
 
 	@ Test
 	public void options() {
@@ -51,14 +48,14 @@ public abstract class AbstractParserTest {
 	public void unsupportedOption() {
 		this.exceptions.expect( IllegalArgumentException.class);
 		this.exceptions.expectMessage( "optional option-argument is not allowed");
-		this.parser.newOption( false, true, ArgumentPolicy.OPTIONAL, "-m");
+		this.parser.addOption( "-m", ( String[]) null, false, true, ArgumentPolicy.OPTIONAL, null, null);
 	}
 
 	@ Test
 	public void duplicateOptionName() {
 		this.exceptions.expect( IllegalArgumentException.class);
 		this.exceptions.expectMessage( "duplicate option name");
-		this.parser.newOption( "-a");
+		this.parser.addOption( "-a", ( String[]) null, false, false, ArgumentPolicy.NONE, null, null);
 	}
 
 	@ Test( expected = ArrayIndexOutOfBoundsException.class)
@@ -73,7 +70,7 @@ public abstract class AbstractParserTest {
 
 	@ Test
 	public void normalPath() {
-		DefaultAccessor result = this.parser.parse( new String[]{ "-!!==", "-a", "file1"}, 1).getAccessor();
+		SimpleAccessor result = this.parser.parse( new String[]{ "-!!==", "-a", "file1"}, 1).getAccessor();
 		Assert.assertArrayEquals( new String[]{ "file1"}, result.getOperands().toArray());
 		result = this.parser.parse( new String[]{ "-!!==", "-a", "file1", "wontsee", null}, 1, 2).getAccessor();
 		Assert.assertArrayEquals( new String[]{ "file1"}, result.getOperands().toArray());

@@ -10,26 +10,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing 
  * permissions and limitations under the License.
  */
-package org.musiel.args.generic;
+package org.musiel.args;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
-import org.musiel.args.ArgumentException;
-import org.musiel.args.ArgumentExceptions;
-import org.musiel.args.Result;
-import org.musiel.args.syntax.Syntax.SyntaxResult;
-
-public class GenericResult extends GenericAccessor implements Result< GenericResult> {
+public class AbstractResult< ACCESSOR> implements Result< ACCESSOR> {
 
 	private final Collection< ? extends ArgumentException> exceptions;
+	private final ACCESSOR accessor;
 
-	public GenericResult( final SyntaxResult syntaxResult, final Map< String, List< String>> operandMap,
-			final Collection< ? extends ArgumentException> exceptions) {
-		super( syntaxResult, operandMap);
-		this.exceptions = exceptions;
+	public AbstractResult( final Collection< ? extends ArgumentException> exceptions, final ACCESSOR accessor) {
+		super();
+		this.exceptions = Collections.unmodifiableCollection( new LinkedList<>( exceptions));
+		this.accessor = accessor;
 	}
 
 	@ Override
@@ -38,7 +33,8 @@ public class GenericResult extends GenericAccessor implements Result< GenericRes
 	}
 
 	@ Override
-	public GenericResult check( final Collection< Class< ? extends ArgumentException>> exceptionTypes) throws ArgumentExceptions {
+	public AbstractResult< ACCESSOR> check( final Collection< Class< ? extends ArgumentException>> exceptionTypes)
+			throws ArgumentExceptions {
 		final LinkedList< ArgumentException> exceptions = new LinkedList<>();
 		for( final Class< ? extends ArgumentException> exceptionType: exceptionTypes)
 			for( final ArgumentException exception: this.exceptions)
@@ -50,7 +46,7 @@ public class GenericResult extends GenericAccessor implements Result< GenericRes
 	}
 
 	@ Override
-	public GenericResult check( final Class< ? extends ArgumentException> exceptionType) throws ArgumentExceptions {
+	public AbstractResult< ACCESSOR> check( final Class< ? extends ArgumentException> exceptionType) throws ArgumentExceptions {
 		final LinkedList< ArgumentException> exceptions = new LinkedList<>();
 		for( final ArgumentException exception: this.exceptions)
 			if( exceptionType.isInstance( exception))
@@ -61,14 +57,14 @@ public class GenericResult extends GenericAccessor implements Result< GenericRes
 	}
 
 	@ Override
-	public GenericResult check() throws ArgumentExceptions {
+	public ACCESSOR check() throws ArgumentExceptions {
 		if( !this.exceptions.isEmpty())
 			throw new ArgumentExceptions( this.exceptions);
-		return this;
+		return this.accessor;
 	}
 
 	@ Override
-	public GenericResult getAccessor() {
-		return this;
+	public ACCESSOR getAccessor() {
+		return this.accessor;
 	}
 }

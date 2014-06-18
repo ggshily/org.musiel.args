@@ -13,7 +13,7 @@
 package org.musiel.args;
 
 /**
- * Indicates if an option can be given with or without an argument, or both.
+ * Indicates whether an option can be given with or without an argument, or both.
  * 
  * @author Bagana
  */
@@ -38,7 +38,8 @@ public enum ArgumentPolicy {
 	private final boolean required;
 
 	/**
-	 * Whether the option accepts an argument (optional or mandatory).
+	 * Whether the option accepts an argument (optional or mandatory). If this method returns <code>false</code>, {@link #isRequired()}
+	 * always returns <code>false</code>.
 	 * 
 	 * @return
 	 */
@@ -47,7 +48,8 @@ public enum ArgumentPolicy {
 	}
 
 	/**
-	 * Whether the option-argument is required.
+	 * Whether the option requires an argument. If this method returns <code>true</code>, {@link #isAccepted()} always returns
+	 * <code>true</code>.
 	 * 
 	 * @return
 	 */

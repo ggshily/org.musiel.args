@@ -13,6 +13,7 @@
 package org.musiel.args;
 
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -32,21 +33,24 @@ public interface Option {
 
 	/**
 	 * All names for this option. MUST NOT be empty. It is preferable to use a set implementation that keeps certain order, like
-	 * {@link LinkedHashSet}, since help message printers might construct a name list according to it.
+	 * {@link LinkedHashSet}, since help message printers might construct a name list according to it, and you will want them in a fixed
+	 * order.
 	 * 
 	 * @return
 	 */
 	public Set< String> getNames();
 
 	/**
-	 * Indicates whether this option must occur at least once (under any name of its) in an argument array.
+	 * Indicates whether this option is required, that is, it must occur at least once (under any name of its) in a command line argument
+	 * list.
 	 * 
 	 * @return
 	 */
 	public boolean isRequired();
 
 	/**
-	 * Indicates whether this option can occur more than once (possibly under different names) in an argument array.
+	 * Indicates whether this option is repeatable, that is, it may occur more than once (possibly under different names) in a command line
+	 * argument list.
 	 * 
 	 * @return
 	 */
@@ -58,4 +62,38 @@ public interface Option {
 	 * @return
 	 */
 	public ArgumentPolicy getArgumentPolicy();
+
+	/**
+	 * Returns a human readable description of the option (typically used in help message printing), or <code>null</code> if no information
+	 * is available.
+	 * 
+	 * @return
+	 */
+	public String getDescription();
+
+	/**
+	 * Returns a human readable description of the option in the specified locale (typically used in help message printing), or
+	 * <code>null</code> if no information is available.
+	 * 
+	 * @param locale Must not be null
+	 * @return
+	 */
+	public String getDescription( Locale locale);
+
+	/**
+	 * Returns a human readable name of the argument (typically used in help message printing), or <code>null</code> if no information is
+	 * available.
+	 * 
+	 * @return
+	 */
+	public String getArgumentName();
+
+	/**
+	 * Returns a human readable name of the argument in the specified locale (typically used in help message printing), or
+	 * <code>null</code> if no information is available.
+	 * 
+	 * @param locale
+	 * @return
+	 */
+	public String getArgumentName( Locale locale);
 }

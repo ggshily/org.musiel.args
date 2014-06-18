@@ -15,6 +15,7 @@ package org.musiel.args.syntax;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -66,6 +67,26 @@ public abstract class AbstractPosixSyntaxTest {
 			@ Override
 			public String getName() {
 				return firstName;
+			}
+
+			@ Override
+			public String getDescription() {
+				return null;
+			}
+
+			@ Override
+			public String getDescription( final Locale locale) {
+				return null;
+			}
+
+			@ Override
+			public String getArgumentName() {
+				return null;
+			}
+
+			@ Override
+			public String getArgumentName( final Locale locale) {
+				return null;
 			}
 		};
 	}

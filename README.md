@@ -49,7 +49,7 @@ my-wget -o index.html --notify a@g.com --notify b@g.com -f --log-level WARN http
 The simplest way to parse above arguments is the following **ONE** line:
 
 ```java
-GenericResult result = new GenericParser().parse( args);
+DefaultResult result = new DefaultParser().parse( args);
 // then use the parse result
 result.getArgument( "-o");          // returns "index.html"
 result.getArguments( "--notify");   // returns a list containing "a@g.com" and "b@g.com"

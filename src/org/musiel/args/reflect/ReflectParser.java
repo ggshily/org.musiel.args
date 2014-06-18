@@ -24,30 +24,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.musiel.args.AbstractParser;
+import org.musiel.args.AbstractResult;
 import org.musiel.args.ArgumentException;
 import org.musiel.args.ArgumentPolicy;
-import org.musiel.args.DefaultAccessor;
 import org.musiel.args.Option;
 import org.musiel.args.Result;
-import org.musiel.args.generic.AbstractResult;
-import org.musiel.args.generic.GenericAccessor;
-import org.musiel.args.generic.InternationalizedParser;
+import org.musiel.args.SimpleAccessor;
+import org.musiel.args.SimpleAccessorImpl;
 import org.musiel.args.syntax.GnuSyntax;
 import org.musiel.args.syntax.Syntax;
 import org.musiel.args.syntax.Syntax.SyntaxResult;
 
-public class ReflectParser< MODEL> extends InternationalizedParser< Result< MODEL>> {
-
-	@ Override
-	public Option newOption( final String name, final String... aliases) {
-		return super.newOption( name, aliases);
-	}
-
-	@ Override
-	public Option newOption( final boolean required, final boolean repeatable, final ArgumentPolicy argumentPolicy, final String name,
-			final String... aliases) {
-		return super.newOption( required, repeatable, argumentPolicy, name, aliases);
-	}
+public class ReflectParser< MODEL> extends AbstractParser< Result< MODEL>> {
 
 	public ReflectParser( final Class< MODEL> resultType) {
 		this( new GnuSyntax(), resultType);
@@ -70,31 +59,37 @@ public class ReflectParser< MODEL> extends InternationalizedParser< Result< MODE
 				this.setOperandDescription( description.name(), description.description());
 		}
 		if( model.isAnnotationPresent( Resource.class))
-			this.setBundleBase( model.getAnnotation( Resource.class).value());
+			this.setResourceBundleBase( model.getAnnotation( Resource.class).value());
 		if( model.isAnnotationPresent( Description.class))
 			this.setDescription( model.getAnnotation( Description.class).value());
 
 		for( final Method method: model.getMethods())
-			if( !DefaultAccessor.class.equals( method.getDeclaringClass()))
+			if( !SimpleAccessor.class.equals( method.getDeclaringClass()))
 				this.methodHandlers.put( method,
-						method.isAnnotationPresent( Operands.class)? new OperandHandler( method, this.getOperandPatternMatcher())
-								: new OptionHandler( method, this));
+						method.isAnnotationPresent( Operands.class)? new OperandHandler( method, this.getOperandNames()): new OptionHandler(
+								method, this));
 	}
 
 	@ Override
-	protected Result< MODEL> adapt( final SyntaxResult syntaxResult, final Map< String, List< String>> operands,
+	protected Option addOption( final String primaryName, final String[] additionalNames, final boolean required,
+			final boolean repeatable, final ArgumentPolicy argumentPolicy, final String description, final String argumentName) {
+		return super.addOption( primaryName, additionalNames, required, repeatable, argumentPolicy, description, argumentName);
+	}
+
+	@ Override
+	protected Result< MODEL> buildResult( final SyntaxResult syntaxResult, final Map< String, List< String>> operands,
 			final Collection< ? extends ArgumentException> parseTimeExceptions) {
 		final Collection< ArgumentException> exceptions = new LinkedHashSet<>( parseTimeExceptions);
-		final GenericAccessor basicAccessor = new GenericAccessor( syntaxResult, operands);
+		final SimpleAccessorImpl simpleAccessor = new SimpleAccessorImpl( syntaxResult, operands);
 
 		final Map< Method, Object> decoded = new HashMap<>();
 		for( final Entry< Method, MethodHandler> methodHandlerPair: this.methodHandlers.entrySet())
-			if( !DefaultAccessor.class.equals( methodHandlerPair.getKey().getDeclaringClass()))
+			if( !SimpleAccessor.class.equals( methodHandlerPair.getKey().getDeclaringClass()))
 				decoded.put( methodHandlerPair.getKey(),
-						methodHandlerPair.getValue().decode( basicAccessor, new ExceptionHandler< DecoderException>() {
+						methodHandlerPair.getValue().decode( simpleAccessor, new ExceptionHandler< DecoderException>() {
 
 							@ Override
-							public void handle( DecoderException exception) {
+							public void handle( final DecoderException exception) {
 								exceptions.add( exception);
 							}
 						}));
@@ -105,8 +100,8 @@ public class ReflectParser< MODEL> extends InternationalizedParser< Result< MODE
 					@ Override
 					public Object invoke( final Object proxy, final Method method, final Object[] args) throws IllegalAccessException,
 							InvocationTargetException {
-						if( DefaultAccessor.class.equals( method.getDeclaringClass()))
-							return method.invoke( basicAccessor, args);
+						if( SimpleAccessor.class.equals( method.getDeclaringClass()))
+							return method.invoke( simpleAccessor, args);
 						return decoded.get( method);
 					}
 				})));

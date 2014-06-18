@@ -12,15 +12,13 @@
  */
 package org.musiel.args.printer;
 
+import java.util.Locale;
+
 import org.musiel.args.Parser;
-import org.musiel.args.i18n.Resource;
-import org.musiel.args.i18n.ResourceSet;
 
 public interface HelpMessagePrinter {
 
 	public void print( final String commandName, final Parser< ?> parser);
 
-	public void print( final String commandName, final Parser< ?> parser, Resource resource);
-
-	public void print( final String commandName, final Parser< ?> parser, ResourceSet resourceSet);
+	public void print( final String commandName, final Parser< ?> parser, Locale locale);
 }

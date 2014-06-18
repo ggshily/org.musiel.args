@@ -86,6 +86,15 @@ public interface Syntax {
 		 * {@link #getErrors()}.
 		 * </p>
 		 * 
+		 * <p>
+		 * If the option is known but never occurred, an empty list is returned. If it is an unknown option and never occured,
+		 * <code>null</code> is returned.
+		 * </p>
+		 * 
+		 * <p>
+		 * The implementation should return an unmodifiable list, as this list might be returned to the user.
+		 * </p>
+		 * 
 		 * @param option
 		 * @return
 		 */
@@ -106,13 +115,26 @@ public interface Syntax {
 		 * {@link #getErrors()}.
 		 * </p>
 		 * 
+		 * <p>
+		 * If the option is known but never occurred, an empty list is returned. If it is an unknown option and never occured,
+		 * <code>null</code> is returned.
+		 * </p>
+		 * 
+		 * <p>
+		 * The implementation should return an unmodifiable list, as this list might be returned to the user.
+		 * </p>
+		 * 
 		 * @param option
 		 * @return
 		 */
 		public List< String> getArguments( String option);
 
 		/**
-		 * Returns all operands.
+		 * Returns all operands. If there is no operand, an empty list is returned.
+		 * 
+		 * <p>
+		 * The implementation should return an unmodifiable list, as this list might be returned to the user.
+		 * </p>
 		 * 
 		 * @return
 		 */

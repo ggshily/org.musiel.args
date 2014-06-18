@@ -415,6 +415,7 @@ public class OperandPattern {
 		return this.match( list);
 	}
 
+	// unmodifiable map with unmodifiable values, contains all operand names
 	public Map< String, List< String>> match( final List< String> operands) throws OperandException {
 		List< Explorer> explorers = new LinkedList<>();
 		explorers.add( new Explorer( new String[ 0], this.initialState));
@@ -446,16 +447,16 @@ public class OperandPattern {
 		final Iterator< String> operandIterator = operands.iterator();
 		for( final String operandName: path) {
 			List< String> list = result.get( operandName);
-			if( list == null) {
-				list = new LinkedList<>();
-				result.put( operandName, list);
-			}
+			if( list == null)
+				result.put( operandName, list = new LinkedList<>());
 			list.add( operandIterator.next());
 		}
+		for( final Entry< String, List< String>> entry: result.entrySet())
+			entry.setValue( Collections.unmodifiableList( new ArrayList<>( entry.getValue())));
 		for( final String operandName: this.names)
 			if( !result.containsKey( operandName))
-				result.put( operandName, new LinkedList< String>());
-		return result;
+				result.put( operandName, Collections.< String>emptyList());
+		return Collections.unmodifiableMap( result);
 	}
 
 	private static class State {

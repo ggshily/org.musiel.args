@@ -26,18 +26,18 @@ public class ArgumentExceptions extends Exception implements Iterable< ArgumentE
 
 	private static final long serialVersionUID = -4664872800886363165L;
 
-	private final Collection< ArgumentException> argumentExceptions = new LinkedList<>();
+	private final Collection< ArgumentException> argumentExceptions;
 
 	public ArgumentExceptions( final Collection< ? extends ArgumentException> exceptions) {
-		this.argumentExceptions.addAll( exceptions);
+		this.argumentExceptions = Collections.unmodifiableCollection( new LinkedList<>( exceptions));
 	}
 
 	public Collection< ArgumentException> getArgumentExceptions() {
-		return Collections.unmodifiableCollection( this.argumentExceptions);
+		return this.argumentExceptions;
 	}
 
 	@ Override
 	public Iterator< ArgumentException> iterator() {
-		return this.getArgumentExceptions().iterator();
+		return this.argumentExceptions.iterator();
 	}
 }

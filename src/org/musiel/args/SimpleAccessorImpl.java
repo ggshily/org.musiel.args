@@ -10,21 +10,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing 
  * permissions and limitations under the License.
  */
-package org.musiel.args.generic;
+package org.musiel.args;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.musiel.args.DefaultAccessor;
 import org.musiel.args.syntax.Syntax.SyntaxResult;
 
-public class GenericAccessor implements DefaultAccessor {
+public class SimpleAccessorImpl implements SimpleAccessor {
 
 	private final SyntaxResult syntaxResult;
 	private final Map< String, List< String>> operandMap;
 
-	public GenericAccessor( final SyntaxResult syntaxResult, final Map< String, List< String>> operandMap) {
+	public SimpleAccessorImpl( final SyntaxResult syntaxResult, final Map< String, List< String>> operandMap) {
 		super();
 		this.syntaxResult = syntaxResult;
 		this.operandMap = operandMap;
@@ -42,13 +41,12 @@ public class GenericAccessor implements DefaultAccessor {
 
 	@ Override
 	public List< String> getNames( final String optionName) {
-		return this.syntaxResult.getNames( optionName);
+		return this.nullToEmptyList( this.syntaxResult.getNames( optionName));
 	}
 
 	@ Override
 	public String[] getNamesAsArray( final String optionName) {
-		final List< String> list = this.getNames( optionName);
-		return list.toArray( new String[ list.size()]);
+		return this.toArray( this.getNames( optionName));
 	}
 
 	@ Override
@@ -58,18 +56,17 @@ public class GenericAccessor implements DefaultAccessor {
 
 	@ Override
 	public List< String> getArguments( final String optionName) {
-		return this.syntaxResult.getArguments( optionName);
+		return this.nullToEmptyList( this.syntaxResult.getArguments( optionName));
 	}
 
 	@ Override
 	public String[] getArgumentsAsArray( final String optionName) {
-		final List< String> list = this.getArguments( optionName);
-		return list.toArray( new String[ list.size()]);
+		return this.toArray( this.getArguments( optionName));
 	}
 
 	@ Override
 	public String getArgument( final String optionName) {
-		return this.getSingle( this.syntaxResult.getArguments( optionName));
+		return this.getSingle( this.getArguments( optionName));
 	}
 
 	@ Override
@@ -79,8 +76,7 @@ public class GenericAccessor implements DefaultAccessor {
 
 	@ Override
 	public String[] getOperandsAsArray() {
-		final List< String> list = this.getOperands();
-		return list.toArray( new String[ list.size()]);
+		return this.toArray( this.getOperands());
 	}
 
 	@ Override
@@ -90,16 +86,12 @@ public class GenericAccessor implements DefaultAccessor {
 
 	@ Override
 	public List< String> getOperands( final String operandName) {
-		List< String> list = this.operandMap.get( operandName);
-		if( list == null)
-			this.operandMap.put( operandName, list = new LinkedList<>());
-		return list;
+		return this.nullToEmptyList( this.operandMap.get( operandName));
 	}
 
 	@ Override
 	public String[] getOperandsAsArray( final String operandName) {
-		final List< String> list = this.getOperands( operandName);
-		return list.toArray( new String[ list.size()]);
+		return this.toArray( this.getOperands( operandName));
 	}
 
 	@ Override
@@ -107,9 +99,15 @@ public class GenericAccessor implements DefaultAccessor {
 		return this.getSingle( this.getOperands( operandName));
 	}
 
+	private String[] toArray( final List< String> list) {
+		return list.toArray( new String[ list.size()]);
+	}
+
+	private < E>List< E> nullToEmptyList( final List< E> list) {
+		return list != null? list: Collections.< E>emptyList();
+	}
+
 	private < E>E getSingle( final List< E> list) {
-		if( list == null)
-			return null;
 		return list.isEmpty()? null: list.get( 0);
 	}
 }

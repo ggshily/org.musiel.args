@@ -10,13 +10,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing 
  * permissions and limitations under the License.
  */
-package org.musiel.args.i18n;
+package org.musiel.args;
 
-import java.util.Locale;
+import org.musiel.args.AbstractParser;
+import org.musiel.args.DefaultParser;
+import org.musiel.args.Result;
+import org.musiel.args.SimpleAccessor;
 
-public interface ResourceSet {
+public class GenericParserTest extends AbstractParserTest {
 
-	public Resource getDefaultResource();
-
-	public Resource getResource( Locale locale);
+	@ Override
+	protected AbstractParser< ? extends Result< ? extends SimpleAccessor>> newParser() {
+		return new DefaultParser();
+	}
 }

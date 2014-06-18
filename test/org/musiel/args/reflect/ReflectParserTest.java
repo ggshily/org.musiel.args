@@ -16,10 +16,10 @@ import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.musiel.args.DefaultAccessor;
+import org.musiel.args.AbstractParser;
+import org.musiel.args.AbstractParserTest;
 import org.musiel.args.Result;
-import org.musiel.args.generic.AbstractParser;
-import org.musiel.args.generic.AbstractParserTest;
+import org.musiel.args.SimpleAccessor;
 
 public class ReflectParserTest extends AbstractParserTest {
 
@@ -60,8 +60,8 @@ public class ReflectParserTest extends AbstractParserTest {
 	}
 
 	@ Override
-	protected AbstractParser< ? extends Result< ? extends DefaultAccessor>> newParser() {
-		return new ReflectParser<>( DefaultAccessor.class);
+	protected AbstractParser< ? extends Result< ? extends SimpleAccessor>> newParser() {
+		return new ReflectParser<>( SimpleAccessor.class);
 	}
 
 	@ OperandPattern( "[INPUT... OUTPUT]")

@@ -14,27 +14,25 @@ package org.musiel.args;
 
 import java.util.List;
 
-import org.musiel.args.generic.GenericParser;
-import org.musiel.args.generic.GenericResult;
 import org.musiel.args.reflect.ReflectParser;
 
 /**
- * Parsing result can be represented in any model. This interface is just one example design. {@link GenericParser} uses it as the parsing
- * result accessor, via {@link GenericResult} who implements this interface. While {@link ReflectParser} gives it special meaning. See
+ * Parsing result can be represented in any model. This interface is just one example design. {@link DefaultParser} uses it as the parsing
+ * result accessor, via {@link DefaultResult} who implements this interface. While {@link ReflectParser} gives it special meaning. See
  * their JavaDoc for detail.
  * 
  * <p>
  * Return values of this interface might be incorrect or even not meet the requirements of the options (required, argument policy, etc),
- * if any input error had occurred. Precisely under what conditions it is guaranteed that the results are correct should be clearly
+ * if any input error had occurred. Precisely under what conditions it guarantees that the results are correct should be clearly
  * documented by any class that provides instances of this interface.
  * </p>
  * 
- * @see GenericParser
- * @see GenericResult
+ * @see DefaultParser
+ * @see DefaultResult
  * @see ReflectParser
  * @author Bagana
  */
-public interface DefaultAccessor {
+public interface SimpleAccessor {
 
 	/**
 	 * Returns whether an option occurred at least once.
@@ -61,7 +59,7 @@ public interface DefaultAccessor {
 	public int getOccurrences( String optionName);
 
 	/**
-	 * Returns the option names used for an option, in the order they occurred.
+	 * Returns the option names used for an option, in the order they occurred. Never returns <code>null</code>.
 	 * 
 	 * <p>
 	 * Using any alias of the option, if any, is equivalent. Thus, the specified option name itself might not have occurred.
@@ -73,7 +71,7 @@ public interface DefaultAccessor {
 	public List< String> getNames( String optionName);
 
 	/**
-	 * An equivalent of {@link #getNames(String)}, with different return type.
+	 * An equivalent of {@link #getNames(String)}, with different return type. Never returns <code>null</code>.
 	 * 
 	 * @param optionName
 	 * @return
@@ -89,7 +87,8 @@ public interface DefaultAccessor {
 	public String getName( String optionName);
 
 	/**
-	 * Returns the option-arguments of an option, in the order they occurred. Occurrences without arguments produce <code>null</code>s.
+	 * Returns the option-arguments of an option, in the order they occurred. Occurrences without arguments produce <code>null</code>
+	 * elements. The return value itself is never <code>null</code>.
 	 * 
 	 * <p>
 	 * Using any alias of the option, if any, is equivalent. Thus, the specified option name itself might not have occurred.
@@ -117,7 +116,7 @@ public interface DefaultAccessor {
 	public String getArgument( String optionName);
 
 	/**
-	 * Returns all operands.
+	 * Returns all operands. Never <code>null</code>.
 	 * 
 	 * @return
 	 */
@@ -138,7 +137,7 @@ public interface DefaultAccessor {
 	public String getOperand();
 
 	/**
-	 * Returns the operands for the specified name.
+	 * Returns the operands for the specified name. Never <code>null</code>.
 	 * 
 	 * @param operandName
 	 * @return

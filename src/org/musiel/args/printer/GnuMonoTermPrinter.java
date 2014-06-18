@@ -14,13 +14,12 @@ package org.musiel.args.printer;
 
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.musiel.args.Option;
 import org.musiel.args.Parser;
-import org.musiel.args.i18n.Resource;
-import org.musiel.args.i18n.ResourceSet;
 
 public class GnuMonoTermPrinter implements HelpMessagePrinter {
 
@@ -43,50 +42,22 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 	}
 
 	private static final String DEFAULT_ARGUMENT_NAME = "ARG";
-	private static final Resource DUMMY_RESOURCE = new Resource() {
-
-		@ Override
-		public String getDescription() {
-			return null;
-		}
-
-		@ Override
-		public String getArgumentName( final String optionName) {
-			return GnuMonoTermPrinter.DEFAULT_ARGUMENT_NAME;
-		}
-
-		@ Override
-		public String getOptionDescription( final String optionName) {
-			return null;
-		}
-
-		@ Override
-		public String getOperandDescription( final String operandName) {
-			return null;
-		}
-	};
-
-	@ Override
-	public void print( final String commandName, final Parser< ?> parser) {
-		this.print( commandName, parser, GnuMonoTermPrinter.DUMMY_RESOURCE);
-	}
-
-	@ Override
-	public void print( final String commandName, final Parser< ?> parser, final ResourceSet resourceSet) {
-		this.print( commandName, parser, resourceSet.getDefaultResource());
-	}
-
 	private static final int BASE_INDENT = 0;
 	private static final int SECTION_INDENT = 2;
 	private static final int WRAP_INDENT = 6;
 	private static final int OPTION_SPACE = 2;
 
 	@ Override
-	public void print( final String commandName, final Parser< ?> parser, final Resource resource) {
+	public void print( final String commandName, final Parser< ?> parser) {
+		this.print( commandName, parser, Locale.getDefault());
+	}
+
+	@ Override
+	public void print( final String commandName, final Parser< ?> parser, final Locale locale) {
 		// USAGE
 		final StringBuilder headline = new StringBuilder().append( commandName);
-		headline.append( this.constructOptionPart( parser, resource));
-		headline.append( this.constructOperandPart( parser, resource));
+		headline.append( this.constructOptionPart( parser, locale));
+		headline.append( this.constructOperandPart( parser));
 		this.printer.println( GnuMonoTermPrinter.BASE_INDENT);
 		this.printer.print( "USAGE", GnuMonoTermPrinter.BASE_INDENT);
 		this.printer.println( GnuMonoTermPrinter.BASE_INDENT);
@@ -95,7 +66,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 		this.printer.println( GnuMonoTermPrinter.BASE_INDENT);
 
 		// DESCRIPTION
-		final String description = resource.getDescription();
+		final String description = parser.getDescription( locale);
 		if( description != null) {
 			this.printer.println( GnuMonoTermPrinter.BASE_INDENT);
 			this.printer.print( "DESCRIPTION", GnuMonoTermPrinter.BASE_INDENT);
@@ -113,7 +84,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 			boolean longOptionFound = false;
 			boolean shortOptionFound = false;
 			for( final Option option: parser.getOptions()) {
-				final String optionHead = this.constructOptionHead( option, resource);
+				final String optionHead = this.constructOptionHead( option, locale);
 				final boolean isLong = optionHead.startsWith( "--");
 				final int withIndent = isLong? optionHead.length() + 4: optionHead.length();
 				final int withoutIndent = optionHead.length();
@@ -121,7 +92,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 				longestHeadWithoutIndent = withoutIndent > longestHeadWithoutIndent? withoutIndent: longestHeadWithoutIndent;
 				longOptionFound = longOptionFound || isLong;
 				shortOptionFound = shortOptionFound || !isLong;
-				final String optionDesc = resource.getOptionDescription( option.getName());
+				final String optionDesc = option.getDescription( locale);
 				options.put( optionHead, optionDesc == null? "": optionDesc);
 			}
 			final int longestHead = shortOptionFound? longestHeadWithIndent: longestHeadWithoutIndent;
@@ -142,7 +113,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 		}
 	}
 
-	private String constructOptionPart( final Parser< ?> parser, final Resource resource) {
+	private String constructOptionPart( final Parser< ?> parser, final Locale locale) {
 		final StringBuilder builder = new StringBuilder();
 		for( final Option option: parser.getOptions()) {
 			builder.append( ' ');
@@ -156,7 +127,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 					builder.append( "[=");
 				else
 					builder.append( '[');
-				final String argumentName = resource.getArgumentName( option.getName());
+				final String argumentName = option.getArgumentName( locale);
 				builder.append( argumentName != null? argumentName: GnuMonoTermPrinter.DEFAULT_ARGUMENT_NAME);
 				if( !option.getArgumentPolicy().isRequired())
 					builder.append( ']');
@@ -169,14 +140,14 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 		return builder.toString();
 	}
 
-	private Object constructOperandPart( final Parser< ?> parser, final Resource resource) {
+	private Object constructOperandPart( final Parser< ?> parser) {
 		final String pattern = parser.getOperandPattern();
 		if( pattern == null || "".equals( pattern.trim()))
 			return "";
 		return " " + pattern;
 	}
 
-	private String constructOptionHead( final Option option, final Resource resource) {
+	private String constructOptionHead( final Option option, final Locale locale) {
 		final StringBuilder builder = new StringBuilder();
 		boolean lastIsLongOption = false;
 		for( final String name: option.getNames()) {
@@ -192,7 +163,7 @@ public class GnuMonoTermPrinter implements HelpMessagePrinter {
 				builder.append( "[=");
 			else
 				builder.append( '[');
-			final String argumentName = resource.getArgumentName( option.getName());
+			final String argumentName = option.getArgumentName( locale);
 			builder.append( argumentName != null? argumentName: GnuMonoTermPrinter.DEFAULT_ARGUMENT_NAME);
 			if( !option.getArgumentPolicy().isRequired())
 				builder.append( ']');
