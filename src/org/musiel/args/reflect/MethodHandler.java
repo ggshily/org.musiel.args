@@ -90,11 +90,23 @@ abstract class MethodHandler {
 	}
 
 	private static ValueConstructor getDefaultConstructor( final Method method) {
-		final ValueConstructor defaultDecoder = MethodHandler.DEFAULTS.get( method.getReturnType());
+		final Class< ?> returnType = method.getReturnType();
+		final ValueConstructor defaultDecoder = MethodHandler.DEFAULTS.get( returnType);
 		if( defaultDecoder == null)
-			throw new IllegalArgumentException( "there is not a default decoder for return type " + method.getReturnType()
+			if( returnType.isEnum())
+				return new ObjectConstructor( MethodHandler.getEnumDecoder( returnType), null);
+			else if( returnType.isArray() && returnType.getComponentType().isEnum())
+				return new ArrayConstructor( MethodHandler.getEnumDecoder( returnType.getComponentType()), returnType.getComponentType(),
+						null);
+		if( defaultDecoder == null)
+			throw new IllegalArgumentException( "there is not a default decoder for return type " + returnType
 					+ ", please specify a decoder annotation");
 		return defaultDecoder;
+	}
+
+	@ SuppressWarnings( "unchecked")
+	private static < E extends Enum< ?>>EnumDecoder< E> getEnumDecoder( final Class< ?> enumType) {
+		return new EnumDecoder<>( ( Class< E>) enumType);
 	}
 
 	private static final Map< Class< ?>, ValueConstructor> DEFAULTS = new HashMap<>();
