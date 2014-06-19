@@ -13,83 +13,20 @@
 package org.musiel.args.syntax;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.musiel.args.ArgumentException;
 import org.musiel.args.ArgumentPolicy;
 import org.musiel.args.Option;
+import org.musiel.args.TestOption;
 import org.musiel.args.syntax.Syntax.SyntaxResult;
 
-public abstract class AbstractPosixSyntaxTest {
+public abstract class PosixAndGnuSyntaxTest {
 
 	protected PosixSyntax syntax;
-
-	@ Before
-	public abstract void setup();
-
-	protected Option option( final String firstName, final String... additionalNames) {
-		return this.option( false, true, ArgumentPolicy.NONE, firstName, additionalNames);
-	}
-
-	protected Option option( final boolean required, final boolean repeatable, final ArgumentPolicy argumentPolicy,
-			final String firstName, final String... additionalNames) {
-		final Set< String> nameSet = new HashSet<>();
-		nameSet.add( firstName);
-		Collections.addAll( nameSet, additionalNames);
-		return new Option() {
-
-			@ Override
-			public boolean isRequired() {
-				return required;
-			}
-
-			@ Override
-			public boolean isRepeatable() {
-				return repeatable;
-			}
-
-			@ Override
-			public ArgumentPolicy getArgumentPolicy() {
-				return argumentPolicy;
-			}
-
-			@ Override
-			public Set< String> getNames() {
-				return nameSet;
-			}
-
-			@ Override
-			public String getName() {
-				return firstName;
-			}
-
-			@ Override
-			public String getDescription() {
-				return null;
-			}
-
-			@ Override
-			public String getDescription( final Locale locale) {
-				return null;
-			}
-
-			@ Override
-			public String getArgumentName() {
-				return null;
-			}
-
-			@ Override
-			public String getArgumentName( final Locale locale) {
-				return null;
-			}
-		};
-	}
 
 	@ Test
 	public void testOptionalArgumentsAllowed() {
@@ -127,7 +64,7 @@ public abstract class AbstractPosixSyntaxTest {
 
 	@ Test
 	public void testValidNames() {
-		this.syntax.validate( this.option( "-a", "-3", "-A"));
+		this.syntax.validate( new TestOption( "-a", "-3", "-A"));
 	}
 
 	protected void testInvalidOption( final Option option) {
@@ -141,25 +78,25 @@ public abstract class AbstractPosixSyntaxTest {
 	@ Test
 	public void testInvalidNames() {
 		for( final String invalidName: new String[]{ "-?", "--", "t", "-ab"})
-			this.testInvalidOption( this.option( invalidName));
+			this.testInvalidOption( new TestOption( invalidName));
 	}
 
 	@ Test
 	public void testOptionalArgumentDisallowed() {
-		this.syntax.validate( this.option( false, true, ArgumentPolicy.REQUIRED, "-a", "-3"));
-		this.testInvalidOption( this.option( false, true, ArgumentPolicy.OPTIONAL, "-a", "-3"));
+		this.syntax.validate( new TestOption( false, true, ArgumentPolicy.REQUIRED, "-a", "-3"));
+		this.testInvalidOption( new TestOption( false, true, ArgumentPolicy.OPTIONAL, "-a", "-3"));
 	}
 
 	@ Test
 	public void testOptionalArgumentAllowed() {
 		this.syntax.setOptionalArgumentsAllowed( true);
-		this.syntax.validate( this.option( false, true, ArgumentPolicy.REQUIRED, "-a", "-3"));
-		this.syntax.validate( this.option( false, true, ArgumentPolicy.OPTIONAL, "-a", "-3"));
+		this.syntax.validate( new TestOption( false, true, ArgumentPolicy.REQUIRED, "-a", "-3"));
+		this.syntax.validate( new TestOption( false, true, ArgumentPolicy.OPTIONAL, "-a", "-3"));
 	}
 
-	protected final Option optionA = this.option( "-a");
-	protected final Option optionB = this.option( "-b");
-	protected final Option optionO = this.option( false, true, ArgumentPolicy.REQUIRED, "-o");
+	protected final Option optionA = new TestOption( "-a");
+	protected final Option optionB = new TestOption( "-b");
+	protected final Option optionO = new TestOption( false, true, ArgumentPolicy.REQUIRED, "-o");
 	protected final Set< Option> options = new HashSet<>();
 	{
 		this.options.add( this.optionA);
@@ -167,18 +104,11 @@ public abstract class AbstractPosixSyntaxTest {
 		this.options.add( this.optionO);
 	}
 
-	protected void verifyException( final Collection< ? extends ArgumentException> errors, final String message) {
-		for( final ArgumentException exception: errors)
-			if( message.equals( exception.getMessage()))
-				return;
-		Assert.fail();
-	}
-
 	@ Test
 	public void testParsingUnsupportedOption() {
 		final Set< Option> options = new HashSet<>( this.options);
 		Assert.assertTrue( this.syntax.parse( options).getErrors().isEmpty());
-		options.add( this.option( "-?"));
+		options.add( new TestOption( "-?"));
 		try {
 			this.syntax.parse( options);
 			Assert.fail();
@@ -191,13 +121,20 @@ public abstract class AbstractPosixSyntaxTest {
 	public void testParsingDuplicateNames() {
 		final Set< Option> options = new HashSet<>( this.options);
 		Assert.assertTrue( this.syntax.parse( options).getErrors().isEmpty());
-		options.add( this.option( "-x", "-a"));
+		options.add( new TestOption( "-x", "-a"));
 		try {
 			this.syntax.parse( options);
 			Assert.fail();
 		} catch( final IllegalArgumentException exception) {
 			Assert.assertTrue( exception.getMessage().contains( "duplicate name"));
 		}
+	}
+
+	protected void verifyException( final Collection< ? extends ArgumentException> errors, final String message) {
+		for( final ArgumentException exception: errors)
+			if( message.equals( exception.getMessage()))
+				return;
+		Assert.fail();
 	}
 
 	@ Test
@@ -213,6 +150,13 @@ public abstract class AbstractPosixSyntaxTest {
 	@ Test
 	public void testUnknownOption() {
 		this.verifyException( this.syntax.parse( this.options, "-x").getErrors(), "unknown option: -x");
+	}
+
+	@ Test
+	public void testParseRequired() {
+		final Set< Option> options = new HashSet<>( this.options);
+		options.add( new TestOption( true, false, ArgumentPolicy.NONE, "-x"));
+		this.verifyException( this.syntax.parse( options, "").getErrors(), "option -x is required");
 	}
 
 	@ Test
@@ -245,19 +189,19 @@ public abstract class AbstractPosixSyntaxTest {
 	}
 
 	@ Test
-	public void parseOptional() {
+	public void testParseOptional() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.OPTIONAL, "-p"));
+		options.add( new TestOption( false, true, ArgumentPolicy.OPTIONAL, "-p"));
 		this.syntax.setOptionalArgumentsAllowed( true);
 		this.syntax.setLateOptionsAllowed( true);
 		final SyntaxResult result =
-				this.syntax.parse( options, "-a", "-abpp1", "-o", "file1", "-p", "-", "xyz", "-pprofile1", "-o-", "--", "-a", "-a");
+				this.syntax.parse( options, "-abpp1", "-o", "file1", "-p", "-", "xyz", "-pprofile1", "-o-", "--", "-a", "-a");
 		Assert.assertTrue( result.getErrors().isEmpty());
 		Assert.assertFalse( result.getNames( "-a").isEmpty());
 		Assert.assertFalse( result.getNames( "-b").isEmpty());
 		Assert.assertFalse( result.getNames( "-o").isEmpty());
 		Assert.assertFalse( result.getNames( "-p").isEmpty());
-		Assert.assertEquals( 2, result.getNames( "-a").size());
+		Assert.assertEquals( 1, result.getNames( "-a").size());
 		Assert.assertEquals( 1, result.getNames( "-b").size());
 		Assert.assertEquals( 2, result.getNames( "-o").size());
 		Assert.assertEquals( 3, result.getNames( "-p").size());

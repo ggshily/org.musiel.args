@@ -17,7 +17,7 @@ import org.musiel.args.DefaultParser;
 import org.musiel.args.Result;
 import org.musiel.args.SimpleAccessor;
 
-public class GenericParserTest extends AbstractParserTest {
+public class DefaultParserTest extends AbstractParserTest {
 
 	@ Override
 	protected AbstractParser< ? extends Result< ? extends SimpleAccessor>> newParser() {

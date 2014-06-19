@@ -16,26 +16,28 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.musiel.args.ArgumentPolicy;
 import org.musiel.args.Option;
+import org.musiel.args.TestOption;
 import org.musiel.args.syntax.Syntax.SyntaxResult;
 
-public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
+public class GnuSyntaxTest extends PosixAndGnuSyntaxTest {
 
-	@ Override
+	@ Before
 	public void setup() {
 		this.syntax = new GnuSyntax();
 	}
 
 	@ Test
 	public void testLongNames() {
-		this.syntax.validate( this.option( "--all", "--3", "--A", "--ignore-pattern"));
+		this.syntax.validate( new TestOption( "--all", "--3", "--A", "--ignore-pattern"));
 	}
 
 	@ Test
 	public void testIllegalNameWithLegalNames() {
-		this.testInvalidOption( this.option( "-a", "-3", "--!"));
+		this.testInvalidOption( new TestOption( "-a", "-3", "--!"));
 	}
 
 	@ Test
@@ -49,7 +51,7 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 
 	@ Test
 	public void testDefaultLateOptionAllowed() {
-		Assert.assertTrue( this.syntax.parse( this.options, "-a", "file1", "-a").getErrors().isEmpty());
+		Assert.assertTrue( this.syntax.parse( this.options, "-a", "file1", "-b").getErrors().isEmpty());
 	}
 
 	@ Test
@@ -61,8 +63,8 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 	@ Test
 	public void testUnknownLongName() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
 		Assert.assertTrue( this.syntax.parse( options, "--ignore", "ignored", "--ignore-file=ignored-file").getErrors().isEmpty());
 		this.verifyException( this.syntax.parse( options, "--ignored", "ignored", "--ignor=ignored-file").getErrors(),
 				"unknown option: --ignored");
@@ -71,8 +73,8 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 	@ Test
 	public void testUnknownLongName2() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
 		Assert.assertTrue( this.syntax.parse( options, "--ignore", "ignored", "--ignore-file=ignored-file").getErrors().isEmpty());
 		this.verifyException( this.syntax.parse( options, "--ignore", "ignored", "--ignor?=ignored-file").getErrors(),
 				"unknown option: --ignor?");
@@ -81,7 +83,7 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 	@ Test
 	public void testAbbreviationDisabled() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
 		Assert.assertTrue( this.syntax.parse( options, "--ign", "ignored").getErrors().isEmpty());
 		( ( GnuSyntax) this.syntax).setAbbreviationAllowed( false);
 		this.verifyException( this.syntax.parse( options, "--ign", "ignored").getErrors(), "unknown option: --ign");
@@ -90,8 +92,8 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 	@ Test
 	public void testAmbiguous() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore-file", "-F"));
 
 		SyntaxResult result = this.syntax.parse( options, "--ignore", "ignored", "--ignore-file=ignored-file");
 		Assert.assertTrue( result.getErrors().isEmpty());
@@ -109,21 +111,28 @@ public class GnuSyntaxTest extends AbstractPosixSyntaxTest {
 	}
 
 	@ Test
+	public void testUnexpectedArgument() {
+		final Set< Option> options = new HashSet<>( this.options);
+		options.add( new TestOption( "-f", "--file"));
+		this.verifyException( this.syntax.parse( options, "--file=output").getErrors(), "option --file does not accept arguments");
+	}
+
+	@ Test
 	public void testParseOptionalGnu() {
 		final Set< Option> options = new HashSet<>( this.options);
-		options.add( this.option( false, true, ArgumentPolicy.OPTIONAL, "--profile", "-p"));
-		options.add( this.option( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
+		options.add( new TestOption( false, true, ArgumentPolicy.OPTIONAL, "--profile", "-p"));
+		options.add( new TestOption( false, true, ArgumentPolicy.REQUIRED, "--ignore", "-I"));
 		this.syntax.setOptionalArgumentsAllowed( true);
 		final SyntaxResult result =
-				this.syntax.parse( options, "-a", "-abpp1", "-o", "file1", "-p", "--profile", "--ignore", "ignored", "--ign=ignored2", "-",
-						"xyz", "--profile=profile1", "-o-", "--", "-a", "-a");
+				this.syntax.parse( options, "-abpp1", "-o", "file1", "-p", "--profile", "--ignore", "ignored", "--ign=ignored2", "-", "xyz",
+						"--profile=profile1", "-o-", "--", "-a", "-a");
 		Assert.assertTrue( result.getErrors().isEmpty());
 		Assert.assertFalse( result.getNames( "-a").isEmpty());
 		Assert.assertFalse( result.getNames( "-b").isEmpty());
 		Assert.assertFalse( result.getNames( "-o").isEmpty());
 		Assert.assertFalse( result.getNames( "-p").isEmpty());
 		Assert.assertFalse( result.getNames( "-I").isEmpty());
-		Assert.assertEquals( 2, result.getNames( "-a").size());
+		Assert.assertEquals( 1, result.getNames( "-a").size());
 		Assert.assertEquals( 1, result.getNames( "-b").size());
 		Assert.assertEquals( 2, result.getNames( "-o").size());
 		Assert.assertEquals( 4, result.getNames( "-p").size());

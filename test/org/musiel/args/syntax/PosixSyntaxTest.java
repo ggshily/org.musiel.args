@@ -13,11 +13,13 @@
 package org.musiel.args.syntax;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.musiel.args.TestOption;
 
-public class PosixSyntaxTest extends AbstractPosixSyntaxTest {
+public class PosixSyntaxTest extends PosixAndGnuSyntaxTest {
 
-	@ Override
+	@ Before
 	public void setup() {
 		this.syntax = new PosixSyntax();
 	}
@@ -31,12 +33,12 @@ public class PosixSyntaxTest extends AbstractPosixSyntaxTest {
 
 	@ Test
 	public void testIllegalNameWithLegalNames() {
-		this.testInvalidOption( this.option( "-a", "-3", "--A"));
+		this.testInvalidOption( new TestOption( "-a", "-3", "--A"));
 	}
 
 	@ Test
 	public void testLateOption() {
 		Assert.assertTrue( this.syntax.parse( this.options, "-a", "file1").getErrors().isEmpty());
-		this.verifyException( this.syntax.parse( this.options, "-a", "file1", "-a").getErrors(), "options must precede operands: -a");
+		this.verifyException( this.syntax.parse( this.options, "-a", "file1", "-b").getErrors(), "options must precede operands: -b");
 	}
 }
